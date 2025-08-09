@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">Créer un utilisateur (DRH/RH)</h2>
+        {% if error %}
+            <p class="text-red-500 text-center">{{ error }}</p>
+        {% endif %}
+        <form action="/api/users/create_user" method="post" class="space-y-4">
+            <div>
+                <label for="nom_utilisateur" class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+                <input type="text" id="nom_utilisateur" name="nom_utilisateur" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" name="email" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="mot_de_passe" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                <input type="password" id="mot_de_passe" name="mot_de_passe" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="role" class="block text-sm font-medium text-gray-700">Rôle</label>
+                <select id="role" name="role" required class="w-full p-2 border rounded-md">
+                    {% if current_user.role == 'SUPER_USER' %}
+                        <option value="DRH">DRH</option>
+                        <option value="RH">RH</option>
+                    {% else %}
+                        <option value="RH">RH</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div>
+                <label for="code_region" class="block text-sm font-medium text-gray-700">Région</label>
+                <select id="code_region" name="code_region" class="w-full p-2 border rounded-md">
+                    <option value="">Aucune</option>
+                    {% for region in regions %}
+                        <option value="{{ region.code }}">{{ region.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Créer</button>
+        </form>
+    </div>
+{% endblock %}

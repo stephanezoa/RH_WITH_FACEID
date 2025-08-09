@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">Démarrer une affectation</h2>
+        {% if error %}
+            <p class="text-red-500 text-center">{{ error }}</p>
+        {% endif %}
+        <form action="/api/users/affectation" method="post" class="space-y-4">
+            <div>
+                <label for="personnel_id" class="block text-sm font-medium text-gray-700">Personnel</label>
+                <select id="personnel_id" name="personnel_id" required class="w-full p-2 border rounded-md">
+                    {% for personnel in personnels %}
+                        <option value="{{ personnel.id }}">{{ personnel.nom }} {{ personnel.prenom }} ({{ personnel.matricule }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="code_region" class="block text-sm font-medium text-gray-700">Nouvelle Région</label>
+                <select id="code_region" name="code_region" required class="w-full p-2 border rounded-md">
+                    {% for region in regions %}
+                        <option value="{{ region.code }}">{{ region.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Démarrer Affectation</button>
+        </form>
+    </div>
+{% endblock %}

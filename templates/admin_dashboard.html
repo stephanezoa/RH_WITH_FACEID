@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">Tableau de bord Admin (SUPER_USER)</h2>
+        <h3 class="text-xl font-semibold mb-2">Tous les utilisateurs</h3>
+        <table class="w-full border-collapse border">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border p-2">Nom d'utilisateur</th>
+                    <th class="border p-2">Email</th>
+                    <th class="border p-2">Rôle</th>
+                    <th class="border p-2">Région</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for utilisateur in utilisateurs %}
+                    <tr>
+                        <td class="border p-2">{{ utilisateur.nom_utilisateur }}</td>
+                        <td class="border p-2">{{ utilisateur.email }}</td>
+                        <td class="border p-2">{{ utilisateur.role }}</td>
+                        <td class="border p-2">{{ utilisateur.code_region or 'Aucune' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h3 class="text-xl font-semibold mt-6 mb-2">Régions</h3>
+        <ul class="list-disc pl-6">
+            {% for region in regions %}
+                <li>{{ region.nom }} ({{ region.code }})</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My RH Project</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-blue-600 text-white p-4">
+        <ul class="flex space-x-4">
+            {% if current_user %}
+                {% if current_user.role == 'SUPER_USER' %}
+                    <li><a href="/api/users/admin_dashboard" class="hover:underline">Tableau de bord Admin</a></li>
+                    <li><a href="/api/users/create" class="hover:underline">Créer un utilisateur</a></li>
+                {% elif current_user.role == 'DRH' %}
+                    <li><a href="/api/users/drh_dashboard" class="hover:underline">Tableau de bord DRH</a></li>
+                    <li><a href="/api/users/create" class="hover:underline">Créer un utilisateur</a></li>
+                {% else %}
+                    <li><a href="/api/users/rh_dashboard" class="hover:underline">Tableau de bord RH</a></li>
+                {% endif %}
+                <li><a href="/logout" class="hover:underline">Déconnexion</a></li>
+            {% else %}
+                <li><a href="/login" class="hover:underline">Connexion</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <main class="container mx-auto mt-6">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

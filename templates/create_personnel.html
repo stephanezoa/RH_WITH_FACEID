@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">Créer un personnel</h2>
+        {% if error %}
+            <p class="text-red-500 text-center">{{ error }}</p>
+        {% endif %}
+        <form action="/api/users/create_personnel" method="post" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <label for="nom" class="block text-sm font-medium text-gray-700">Nom</label>
+                <input type="text" id="nom" name="nom" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="prenom" class="block text-sm font-medium text-gray-700">Prénom</label>
+                <input type="text" id="prenom" name="prenom" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="sexe" class="block text-sm font-medium text-gray-700">Sexe</label>
+                <select id="sexe" name="sexe" required class="w-full p-2 border rounded-md">
+                    <option value="MALE">Homme</option>
+                    <option value="FEMALE">Femme</option>
+                    <option value="OTHER">Autre</option>
+                </select>
+            </div>
+            <div>
+                <label for="age" class="block text-sm font-medium text-gray-700">Âge</label>
+                <input type="number" id="age" name="age" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="grade" class="block text-sm font-medium text-gray-700">Grade</label>
+                <input type="text" id="grade" name="grade" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="matricule" class="block text-sm font-medium text-gray-700">Matricule</label>
+                <input type="text" id="matricule" name="matricule" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="taille" class="block text-sm font-medium text-gray-700">Taille (cm)</label>
+                <input type="number" id="taille" name="taille" required class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="code_region" class="block text-sm font-medium text-gray-700">Région</label>
+                <select id="code_region" name="code_region" required class="w-full p-2 border rounded-md">
+                    {% for region in regions %}
+                        <option value="{{ region.code }}">{{ region.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="photo" class="block text-sm font-medium text-gray-700">Photo (via webcam)</label>
+                <video id="webcam" width="320" height="240" autoplay class="border rounded-md"></video>
+                <canvas id="canvas" width="320" height="240" class="hidden"></canvas>
+                <input type="file" id="photo" name="photo" accept="image/*" class="w-full p-2 border rounded-md">
+                <button type="button" id="capture" class="mt-2 bg-gray-600 text-white p-2 rounded-md hover:bg-gray-700">Capturer Photo</button>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Créer</button>
+        </form>
+    </div>
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const photo = document.getElementById('photo');
+        const captureButton = document.getElementById('capture');
+
+        async function startWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Erreur d'accès à la webcam:", err);
+                alert("Impossible d'accéder à la webcam. Veuillez vérifier les autorisations.");
+            }
+        }
+
+        captureButton.addEventListener('click', () => {
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "webcam_photo.jpg", { type: "image/jpeg" });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                photo.files = dataTransfer.files;
+            }, 'image/jpeg');
+        });
+
+        startWebcam();
+    </script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">Confirmer une affectation</h2>
+        {% if error %}
+            <p class="text-red-500 text-center">{{ error }}</p>
+        {% endif %}
+        {% if affectations %}
+            <ul class="space-y-4">
+                {% for affectation in affectations %}
+                    <li class="border p-4 rounded-md">
+                        <p><strong>Personnel ID:</strong> {{ affectation.personnel_id }}</p>
+                        <p><strong>Nouvelle Région:</strong> {{ affectation.code_region }}</p>
+                        <p><strong>Statut:</strong> {{ affectation.status }}</p>
+                        <form action="/api/users/confirm_affectation/{{ affectation.id }}" method="post">
+                            <button type="submit" class="bg-green-600 text-white p-2 rounded-md hover:bg-green-700">Confirmer Arrivée</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-center">Aucune affectation en attente.</p>
+        {% endif %}
+    </div>
+{% endblock %}

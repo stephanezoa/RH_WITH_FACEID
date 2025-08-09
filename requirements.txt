@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy==2.0.31
+pydantic-settings==2.5.2
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+jinja2==3.1.4
