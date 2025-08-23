@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CodeSightSettings">
+    <option name="version" value="3" />
+    <option name="localViewColumnStates">
+      <map>
+        <entry key="SIGMA">
+          <value>
+            <list>
+              <ColumnState>
+                <option name="name" value="severity" />
+                <option name="width" value="35" />
+              </ColumnState>
+              <ColumnState>
+                <option name="name" value="type" />
+                <option name="width" value="399" />
+              </ColumnState>
+              <ColumnState>
+                <option name="name" value="location" />
+                <option name="width" value="399" />
+              </ColumnState>
+              <ColumnState>
+                <option name="name" value="domain" />
+                <option name="width" value="300" />
+              </ColumnState>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="localViewSelectedScanType" value="SIGMA" />
+  </component>
+</project>

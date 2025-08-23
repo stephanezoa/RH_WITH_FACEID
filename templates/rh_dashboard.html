@@ -1,6 +1,22 @@
 {% extends "base.html" %}
+{% block title %}Tableau de bord RH{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto py-8 px-4 animate-fade-in">
+    <!-- Région de l'utilisateur courant -->
+    <div class="bg-blue-600 text-white rounded-lg shadow-md p-4 mb-6 text-center animate-fade-in-down">
+        <h2 class="text-xl font-bold flex items-center justify-center">
+            <i class="fas fa-map-marker-alt mr-2"></i>
+            Région :
+            {% for region in regions %}
+                {% if region.code == current_user.code_region %}
+                    {{ region.nom }}
+                {% endif %}
+            {% else %}
+                Non spécifiée
+            {% endfor %}
+        </h2>
+    </div>
+
     <!-- En-tête -->
     <div class="mb-10 text-center">
         <h1 class="text-3xl font-bold text-gray-800 mb-3 flex items-center justify-center">
@@ -158,7 +174,7 @@
     <!-- Conteneur pour la webcam -->
     <div id="webcamModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-xl p-6 max-w-md w-full">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Capture visage</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Capture visage
             <video id="webcam" autoplay playsinline class="w-full h-64 mb-4"></video>
             <canvas id="canvas" class="hidden"></canvas>
             <div class="flex justify-end gap-4">
@@ -285,6 +301,9 @@
     .animate-slide-in {
         animation: slideIn 0.5s ease-in;
     }
+    .animate-fade-in-down {
+        animation: fadeInDown 0.5s ease-in;
+    }
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -292,6 +311,10 @@
     @keyframes slideIn {
         from { transform: translateY(20px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     .btn-primary {
         @apply bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200;
