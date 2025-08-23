@@ -1,33 +1,309 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Tableau de bord RH</h2>
-        <h3 class="text-xl font-semibold mb-2">Vos informations</h3>
-        <table class="w-full border-collapse border">
-            <thead>
-                <tr class="bg-gray-200">
-                    <th class="border p-2">Nom d'utilisateur</th>
-                    <th class="border p-2">Email</th>
-                    <th class="border p-2">Rôle</th>
-                    <th class="border p-2">Région</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for utilisateur in utilisateurs %}
-                    <tr>
-                        <td class="border p-2">{{ utilisateur.nom_utilisateur }}</td>
-                        <td class="border p-2">{{ utilisateur.email }}</td>
-                        <td class="border p-2">{{ utilisateur.role }}</td>
-                        <td class="border p-2">{{ utilisateur.code_region or 'Aucune' }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <h3 class="text-xl font-semibold mt-6 mb-2">Votre région</h3>
-        <ul class="list-disc pl-6">
-            {% for region in regions %}
-                <li>{{ region.nom }} ({{ region.code }})</li>
-            {% endfor %}
-        </ul>
+<div class="max-w-6xl mx-auto py-8 px-4 animate-fade-in">
+    <!-- En-tête -->
+    <div class="mb-10 text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-3 flex items-center justify-center">
+            <i class="fas fa-tachometer-alt mr-3 text-blue-600"></i>Tableau de bord RH
+        </h1>
+        <p class="text-lg text-gray-600">Gérez et validez les affectations</p>
     </div>
+
+    <!-- Messages -->
+    {% if error %}
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6 flex items-center animate-slide-in">
+            <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+            <div>{{ error }}</div>
+        </div>
+    {% endif %}
+    {% if success %}
+        <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6 flex items-center animate-slide-in">
+            <i class="fas fa-check-circle mr-3 text-green-500"></i>
+            <div>{{ success }}</div>
+        </div>
+    {% endif %}
+
+    <!-- Animation de chargement globale -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600"></div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-blue-100 animate-slide-in">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-bell mr-2 text-blue-600"></i>Notifications récentes
+        </h2>
+        {% if notifications %}
+            <ul class="space-y-2">
+                {% for notification in notifications %}
+                    <li class="text-gray-600">{{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}: {{ notification.message }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-600">Aucune notification récente.</p>
+        {% endif %}
+    </div>
+
+    <!-- Filtres -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-blue-100 animate-slide-in">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label for="region_filter" class="form-label flex items-center text-gray-800 font-medium mb-2">
+                    <i class="fas fa-map-marker-alt mr-2 text-blue-600"></i>Région
+                </label>
+                <select name="region_filter" id="region_filter" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                    <option value="">Toutes les régions</option>
+                    {% for region in regions %}
+                        <option value="{{ region.code }}" {% if region_filter == region.code %}selected{% endif %}>{{ region.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="status_filter" class="form-label flex items-center text-gray-800 font-medium mb-2">
+                    <i class="fas fa-filter mr-2 text-blue-600"></i>Statut
+                </label>
+                <select name="status_filter" id="status_filter" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                    <option value="ALL" {% if status_filter == "ALL" %}selected{% endif %}>Tous</option>
+                    <option value="PENDING" {% if status_filter == "PENDING" %}selected{% endif %}>En attente</option>
+                    <option value="CONFIRMED" {% if status_filter == "CONFIRMED" %}selected{% endif %}>Confirmée</option>
+                </select>
+            </div>
+            <div>
+                <label for="date_filter" class="form-label flex items-center text-gray-800 font-medium mb-2">
+                    <i class="fas fa-calendar-alt mr-2 text-blue-600"></i>Date
+                </label>
+                <input type="date" name="date_filter" id="date_filter" value="{{ date_filter }}" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+            </div>
+            <div class="flex justify-end items-end">
+                <button type="submit" class="btn-primary px-5 py-2.5 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition flex items-center">
+                    <i class="fas fa-search mr-2"></i>Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Rapport des affectations -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-blue-100 animate-slide-in">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-chart-bar mr-2 text-blue-600"></i>Rapport des affectations en attente
+        </h2>
+        {% if affectations_report %}
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-blue-50">
+                        <th class="px-4 py-2 text-left">Région</th>
+                        <th class="px-4 py-2 text-left">Nombre d'affectations en attente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for region, count in affectations_report.items() %}
+                        <tr class="border-t">
+                            <td class="px-4 py-2">{{ region }}</td>
+                            <td class="px-4 py-2">{{ count }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-gray-600">Aucune affectation en attente pour le moment.</p>
+        {% endif %}
+    </div>
+
+    <!-- Liste des affectations -->
+    <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-100 animate-slide-in">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-list mr-2 text-blue-600"></i>Affectations
+        </h2>
+        <p>Nombre d'affectations : {{ affectations | length }}</p>
+        {% if affectations %}
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-blue-50">
+                        <th class="px-4 py-2 text-left">Nom</th>
+                        <th class="px-4 py-2 text-left">Prénom</th>
+                        <th class="px-4 py-2 text-left">Matricule</th>
+                        <th class="px-4 py-2 text-left">Région</th>
+                        <th class="px-4 py-2 text-left">Statut</th>
+                        <th class="px-4 py-2 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for affectation, personnel in affectations %}
+                        <tr class="border-t">
+                            <td class="px-4 py-2">{{ personnel.nom }}</td>
+                            <td class="px-4 py-2">{{ personnel.prenom }}</td>
+                            <td class="px-4 py-2">{{ personnel.matricule }}</td>
+                            <td class="px-4 py-2">{{ affectation.code_region }}</td>
+                            <td class="px-4 py-2">{{ affectation.status }}</td>
+                            <td class="px-4 py-2">
+                                <p>Debug: ID={{ affectation.id }}, Statut={{ affectation.status }}, Role={{ current_user.role }}</p>
+                                {% if current_user.role == "RH" %}
+                                    <button class="btn-primary px-4 py-2 rounded-md text-white bg-green-600 hover:bg-green-700 transition flex items-center capture-webcam" data-affectation-id="{{ affectation.id }}">
+                                        <i class="fas fa-camera mr-2"></i>Vérifier visage
+                                    </button>
+                                    {% if affectation.confidence is not none %}
+                                        <p class="text-{{ affectation.confidence_color }}">{{ affectation.confidence_message }}</p>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-gray-600">Aucune affectation pour la région ou le statut sélectionné.</p>
+        {% endif %}
+    </div>
+
+    <!-- Conteneur pour la webcam -->
+    <div id="webcamModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Capture visage</h2>
+            <video id="webcam" autoplay playsinline class="w-full h-64 mb-4"></video>
+            <canvas id="canvas" class="hidden"></canvas>
+            <div class="flex justify-end gap-4">
+                <button id="capturePhoto" class="btn-primary px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition flex items-center">
+                    <i class="fas fa-camera mr-2"></i>Capturer Photo
+                </button>
+                <button id="stopWebcam" class="btn-secondary px-4 py-2 rounded-md text-gray-800 bg-blue-100 hover:bg-blue-200 transition flex items-center">
+                    <i class="fas fa-times mr-2"></i>Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inclure Toastify -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<script>
+    // Gestion de la webcam
+    let stream = null;
+    const webcamModal = document.getElementById('webcamModal');
+    const webcam = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas');
+    const capturePhoto = document.getElementById('capturePhoto');
+    const stopWebcam = document.getElementById('stopWebcam');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    document.querySelectorAll('.capture-webcam').forEach(button => {
+        console.log('Bouton capture-webcam trouvé:', button);
+        button.addEventListener('click', async () => {
+            const affectationId = button.getAttribute('data-affectation-id');
+            console.log('Ouverture modale pour affectation ID:', affectationId);
+            webcamModal.dataset.affectationId = affectationId;
+            webcamModal.classList.remove('hidden');
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webcam.srcObject = stream;
+            } catch (err) {
+                console.error('Erreur webcam:', err);
+                Toastify({
+                    text: "Erreur d'accès à la webcam : " + err.message,
+                    duration: 5000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#EF4444",
+                    stopOnFocus: true
+                }).showToast();
+                webcamModal.classList.add('hidden');
+            }
+        });
+    });
+
+    stopWebcam.addEventListener('click', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        webcamModal.classList.add('hidden');
+    });
+
+    capturePhoto.addEventListener('click', async () => {
+        const affectationId = webcamModal.dataset.affectationId;
+        canvas.width = webcam.videoWidth;
+        canvas.height = webcam.videoHeight;
+        canvas.getContext('2d').drawImage(webcam, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const blob = await (await fetch(dataUrl)).blob();
+        const formData = new FormData();
+        formData.append('photo', blob, `webcam_${affectationId}.jpg`);
+
+        capturePhoto.disabled = true;
+        capturePhoto.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>';
+        loadingOverlay.classList.remove('hidden');
+
+        try {
+            const response = await fetch(`/api/users/confirm_affectation_with_face/${affectationId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                Toastify({
+                    text: result.message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#10B981",
+                    stopOnFocus: true
+                }).showToast();
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                throw new Error(result.detail || "Erreur lors de la validation");
+            }
+        } catch (err) {
+            console.error('Erreur lors de la validation:', err);
+            Toastify({
+                text: `Erreur : ${err.message}`,
+                duration: 5000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#EF4444",
+                stopOnFocus: true
+            }).showToast();
+        } finally {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            webcamModal.classList.add('hidden');
+            capturePhoto.disabled = false;
+            capturePhoto.innerHTML = '<i class="fas fa-camera mr-2"></i>Capturer Photo';
+            loadingOverlay.classList.add('hidden');
+        }
+    });
+</script>
+
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    .animate-slide-in {
+        animation: slideIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .btn-primary {
+        @apply bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200;
+    }
+    .btn-secondary {
+        @apply bg-blue-100 text-gray-800 rounded-md hover:bg-blue-200 transition-colors duration-200;
+    }
+    .form-input {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400;
+    }
+    .form-label {
+        @apply text-sm font-medium text-gray-700;
+    }
+</style>
 {% endblock %}

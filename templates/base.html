@@ -3,31 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My RH Project</title>
+    <title>{% block title %}My RH Project{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Dégradé bleu militaire raffiné */
+        .bg-military-gradient {
+            background: linear-gradient(135deg, #1a365d 0%, #2a4365 30%, #2c5282 60%, #3182ce 100%);
+        }
+        .bg-military-light {
+            background: linear-gradient(to bottom, #ebf8ff, #bee3f8);
+        }
+
+        /* Style pour les champs de formulaire */
+        .form-input {
+            @apply mt-2 block w-full border-2 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 text-base text-gray-800 placeholder-gray-500 transition duration-200;
+        }
+
+        /* Style pour les labels */
+        .form-label {
+            @apply block text-base font-semibold text-gray-800 mb-1 flex items-center;
+        }
+
+        /* Style pour les boutons */
+        .btn-primary {
+            @apply bg-blue-700 hover:bg-blue-800 text-white font-medium px-6 py-3 rounded-lg shadow-md transition duration-300 focus:ring-2 focus:ring-blue-300 focus:outline-none flex items-center justify-center;
+        }
+
+        .btn-secondary {
+            @apply bg-gray-500 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg shadow-md transition duration-300 focus:ring-2 focus:ring-gray-300 focus:outline-none flex items-center justify-center;
+        }
+
+        /* Style pour les liens de la navbar */
+        .nav-link {
+            @apply text-white text-base px-4 py-2 rounded-md hover:bg-blue-800 transition duration-300 focus:ring-2 focus:ring-blue-300 focus:outline-none;
+        }
+
+        /* Style pour le menu hamburger */
+        .hamburger {
+            @apply md:hidden text-white text-2xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-md p-1;
+        }
+
+        /* Cartes et conteneurs */
+        .form-container {
+            @apply bg-white rounded-xl shadow-xl p-6 border border-blue-100;
+        }
+
+        /* Badges et indicateurs */
+        .badge {
+            @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        }
+
+        .badge-info {
+            @apply bg-blue-100 text-blue-800;
+        }
+
+        /* Icônes */
+        .icon {
+            @apply mr-2 text-current;
+        }
+
+        /* Disposition responsive */
+        .form-grid {
+            @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+        }
+
+        /* Animation subtile */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Style personnalisé pour les selects */
+        select.form-input {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23333'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.5em;
+            padding-right: 2.5rem;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        /* Amélioration du file upload */
+        .file-upload {
+            @apply block w-full text-base text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-base file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-300 focus:ring-2 focus:ring-blue-300 focus:outline-none;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-blue-600 text-white p-4">
-        <ul class="flex space-x-4">
-            {% if current_user %}
-                {% if current_user.role == 'SUPER_USER' %}
-                    <li><a href="/api/users/admin_dashboard" class="hover:underline">Tableau de bord Admin</a></li>
-                    <li><a href="/api/users/create" class="hover:underline">Créer un utilisateur</a></li>
-                {% elif current_user.role == 'DRH' %}
-                    <li><a href="/api/users/drh_dashboard" class="hover:underline">Tableau de bord DRH</a></li>
-                    <li><a href="/api/users/create" class="hover:underline">Créer un utilisateur</a></li>
+<body class="bg-military-light font-sans min-h-screen">
+    <!-- Barre de navigation -->
+    <nav class="bg-military-gradient text-white shadow-lg sticky top-0 z-50" role="navigation" aria-label="Navigation principale">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="text-2xl font-bold flex items-center" aria-label="Titre de l'application">
+                <i class="fas fa-landmark mr-2"></i>My RH Project
+            </div>
+            <button class="hamburger" onclick="toggleMenu()" aria-label="Ouvrir/fermer le menu">☰</button>
+            <ul class="hidden md:flex md:space-x-4 items-center" id="nav-menu">
+                {% if current_user %}
+                    {% if current_user.role == 'SUPER_USER' %}
+                        <li><a href="/api/users/admin_dashboard" class="nav-link" aria-label="Tableau de bord Admin"><i class="fas fa-tachometer-alt icon"></i>Tableau de bord</a></li>
+                        <li><a href="/api/users/create" class="nav-link" aria-label="Créer un utilisateur"><i class="fas fa-user-plus icon"></i>Créer utilisateur</a></li>
+                        <li><a href="/api/users/create_personnel" class="nav-link" aria-label="Créer un personnel"><i class="fas fa-id-card icon"></i>Créer personnel</a></li>
+                    {% elif current_user.role == 'DRH' %}
+                        <li><a href="/api/users/drh_dashboard" class="nav-link" aria-label="Tableau de bord DRH"><i class="fas fa-tachometer-alt icon"></i>Tableau de bord</a></li>
+                        <li><a href="/api/users/create" class="nav-link" aria-label="Créer un utilisateur"><i class="fas fa-user-plus icon"></i>Créer utilisateur</a></li>
+                        <li><a href="/api/users/create_personnel" class="nav-link" aria-label="Créer un personnel"><i class="fas fa-id-card icon"></i>Créer personnel</a></li>
+                    {% else %}
+                        <li><a href="/api/users/rh_dashboard" class="nav-link" aria-label="Tableau de bord RH"><i class="fas fa-tachometer-alt icon"></i>Tableau de bord</a></li>
+                    {% endif %}
+                    <li><a href="/logout" class="btn-primary" aria-label="Déconnexion"><i class="fas fa-sign-out-alt icon"></i>Déconnexion</a></li>
                 {% else %}
-                    <li><a href="/api/users/rh_dashboard" class="hover:underline">Tableau de bord RH</a></li>
+                    <li><a href="/login" class="nav-link" aria-label="Connexion"><i class="fas fa-sign-in-alt icon"></i>Connexion</a></li>
                 {% endif %}
-                <li><a href="/logout" class="hover:underline">Déconnexion</a></li>
-            {% else %}
-                <li><a href="/login" class="hover:underline">Connexion</a></li>
-            {% endif %}
-        </ul>
+            </ul>
+        </div>
     </nav>
-    <main class="container mx-auto mt-6">
-        {% block content %}{% endblock %}
+
+    <!-- Contenu principal -->
+    <main class="container mx-auto py-8 px-4">
+        {% block content %}
+        {% endblock %}
     </main>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('nav-menu');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+            menu.classList.toggle('flex-col');
+            menu.classList.toggle('absolute');
+            menu.classList.toggle('top-full');
+            menu.classList.toggle('left-0');
+            menu.classList.toggle('w-full');
+            menu.classList.toggle('bg-military-gradient');
+            menu.classList.toggle('p-4');
+            menu.classList.toggle('space-y-3');
+        }
+    </script>
 </body>
 </html>

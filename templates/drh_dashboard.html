@@ -1,20 +1,209 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord DRH</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-    <h1>Bienvenue, {{ current_user.nom_utilisateur }} !</h1>
-    <h2>Tableau de bord DRH</h2>
-    <p>Région : {{ current_user.code_region }}</p>
-    <nav>
-        <a href="/api/users/create_user">Créer un utilisateur RH</a> |
-        <a href="/api/users/create_personnel">Créer un personnel</a> |
-        <a href="/api/users/create_affectation">Créer une affectation</a> |
-        <a href="/logout">Déconnexion</a>
-    </nav>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Tableau de bord DRH{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-8 px-4 animate-fade-in">
+    <div class="mb-10 text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-3 flex items-center justify-center">
+            <i class="fas fa-tachometer-alt mr-3 text-blue-600"></i>Tableau de bord DRH - {{ current_user.nom_utilisateur }}
+        </h2>
+        <p class="text-lg text-gray-600">Gérez les affectations, les utilisateurs et les personnels</p>
+    </div>
+
+    <div class="form-container bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+        <!-- Filtre par région -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-filter mr-2 text-blue-600"></i>Filtrer par région de destination
+            </h3>
+            <form method="get" action="/api/users/drh_dashboard" class="flex flex-col md:flex-row items-start md:items-center gap-4">
+                <select name="region_filter" id="region_filter" class="form-input w-full md:w-1/2 bg-blue-50">
+                    <option value="" {% if not region_filter %}selected{% endif %}>Toutes les régions (par défaut : {{ current_user.code_region | default('non définie') }})</option>
+                    {% for region in regions %}
+                        <option value="{{ region.code }}" {% if region_filter == region.code %}selected{% endif %}>
+                            {{ region.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-primary px-5 py-2.5">
+                    <i class="fas fa-search mr-2"></i>Filtrer
+                </button>
+            </form>
+        </div>
+
+        <!-- Liste des affectations en cours -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-list mr-2 text-blue-600"></i>Affectations en cours (PENDING)
+            </h3>
+            {% if affectations %}
+                <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-blue-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Nom</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Prénom</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Matricule</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Région d'origine</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Région de destination</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Statut</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for affectation, personnel in affectations %}
+                                <tr class="hover:bg-blue-50 transition-colors duration-200">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ personnel.nom }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ personnel.prenom }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ personnel.matricule }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ personnel.code_region }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ affectation.code_region }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            {{ affectation.status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="/api/affectations/{{ affectation.id }}/edit" class="text-blue-600 hover:text-blue-900 mr-3">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </a>
+                                        <a href="/api/affectations/{{ affectation.id }}/delete" class="text-red-600 hover:text-red-900">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg flex items-center">
+                    <i class="fas fa-info-circle mr-3 text-blue-500"></i>
+                    <p>Aucune affectation en cours pour la région sélectionnée.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Rapport statistique -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-chart-bar mr-2 text-blue-600"></i>Rapport : Nombre de personnes partant par région
+            </h3>
+            {% if affectations_report %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-blue-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Région de destination</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Nombre de personnes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for region, count in affectations_report.items() %}
+                                    <tr class="hover:bg-blue-50 transition-colors duration-200">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ region }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {{ count }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Graphique simple (visuel seulement) -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <h4 class="text-lg font-medium text-gray-800 mb-4">Répartition visuelle</h4>
+                        <div class="space-y-3">
+                            {% for region, count in affectations_report.items() %}
+                                <div>
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>{{ region }}</span>
+                                        <span>{{ count }}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ (count / affectations_report.values()|max) * 80 + 20 }}%"></div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg flex items-center">
+                    <i class="fas fa-info-circle mr-3 text-blue-500"></i>
+                    <p>Aucun rapport disponible (aucune affectation en cours).</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Cartes de statistiques rapides -->
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-chart-pie mr-2 text-blue-600"></i>Statistiques globales
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 p-5 rounded-lg border border-blue-200 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-users text-3xl text-blue-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total personnels</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ total_personnels|default(0) }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 p-5 rounded-lg border border-green-200 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-3xl text-green-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Affectations terminées</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ completed_affectations|default(0) }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 p-5 rounded-lg border border-yellow-200 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-clock text-3xl text-yellow-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">En attente</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ pending_affectations|default(0) }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liens vers les actions DRH -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+            <a href="/api/users/create_user" class="btn-primary flex flex-col items-center justify-center p-4 text-center">
+                <i class="fas fa-user-plus text-2xl mb-2"></i>
+                <span>Créer un utilisateur</span>
+            </a>
+            <a href="/api/users/create_personnel" class="btn-primary flex flex-col items-center justify-center p-4 text-center">
+                <i class="fas fa-id-card text-2xl mb-2"></i>
+                <span>Créer un personnel</span>
+            </a>
+            <a href="/api/users/create_affectation" class="btn-primary flex flex-col items-center justify-center p-4 text-center">
+                <i class="fas fa-exchange-alt text-2xl mb-2"></i>
+                <span>Démarrer une affectation</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

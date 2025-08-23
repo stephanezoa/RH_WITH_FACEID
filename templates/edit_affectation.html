@@ -1,10 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Modifier une affectation{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-8 px-4 animate-fade-in">
+    <div class="mb-10 text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-3 flex items-center justify-center">
+            <i class="fas fa-edit mr-3 text-blue-600"></i>Modifier l'affectation
+        </h1>
+        <p class="text-lg text-gray-600">Modifiez les détails de l'affectation pour {{ personnel.nom }} {{ personnel.prenom }}</p>
+    </div>
 
-</body>
-</html>
+    <div class="form-container bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+        <form method="post" action="/api/affectations/{{ affectation.id }}/edit" id="editAffectationForm" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="code_region" class="form-label flex items-center text-gray-800 font-medium">
+                        <i class="fas fa-map-marker-alt mr-2 text-blue-600"></i>Nouvelle Région
+                    </label>
+                    <select name="code_region" id="code_region" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                        <option value="" disabled>Sélectionnez une région</option>
+                        {% for region in regions %}
+                            <option value="{{ region.code }}" {% if region.code == affectation.code_region %}selected{% endif %}>
+                                {{ region.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="status" class="form-label flex items-center text-gray-800 font-medium">
+                        <i class="fas fa-info-circle mr-2 text-blue-600"></i>Statut
+                    </label>
+                    <select name="status" id="status" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                        <option value="PENDING" {% if affectation.status == 'PENDING' %}selected{% endif %}>En attente</option>
+                        <option value="APPROVED" {% if affectation.status == 'APPROVED' %}selected{% endif %}>Approuvé</option>
+                        <option value="REJECTED" {% if affectation.status == 'REJECTED' %}selected{% endif %}>Rejeté</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 pt-8">
+                <a href="/api/users/drh_dashboard" class="btn-secondary px-5 py-2.5 rounded-md text-gray-800 bg-blue-100 hover:bg-blue-200 transition text-center" aria-label="Annuler">
+                    <i class="fas fa-times mr-2 text-blue-600"></i>Annuler
+                </a>
+                <button type="submit" class="btn-primary px-5 py-2.5 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition" aria-label="Modifier l'affectation">
+                    <i class="fas fa-save mr-2"></i>Modifier
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('editAffectationForm').addEventListener('submit', (event) => {
+        const regionSelect = document.getElementById('code_region');
+        const statusSelect = document.getElementById('status');
+        const submitButton = document.querySelector('button[type="submit"]');
+
+        submitButton.disabled = true;
+
+        if (!regionSelect.value || regionSelect.value === '') {
+            event.preventDefault();
+            alert('Veuillez sélectionner une région.');
+            submitButton.disabled = false;
+            return;
+        }
+        if (!statusSelect.value || statusSelect.value === '') {
+            event.preventDefault();
+            alert('Veuillez sélectionner un statut.');
+            submitButton.disabled = false;
+            return;
+        }
+    });
+</script>
+{% endblock %}

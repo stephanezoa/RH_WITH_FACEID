@@ -1,87 +1,266 @@
 {% extends "base.html" %}
+{% block title %}Créer un personnel{% endblock %}
 {% block content %}
-    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Créer un personnel</h2>
+<div class="max-w-5xl mx-auto py-8 animate-fade-in">
+    <div class="mb-10 text-center">
+        <h1 class="text-4xl font-bold text-gray-800 mb-3">Création de personnel</h1>
+        <p class="text-lg text-gray-600">Renseignez les informations du nouveau membre du personnel</p>
+    </div>
+
+    <div class="form-container bg-white shadow-lg rounded-lg p-8">
         {% if error %}
-            <p class="text-red-500 text-center">{{ error }}</p>
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6 flex items-center">
+                <i class="fas fa-exclamation-circle mr-3"></i>
+                <div>{{ error }}</div>
+            </div>
         {% endif %}
-        <form action="/api/users/create_personnel" method="post" enctype="multipart/form-data" class="space-y-4">
-            <div>
-                <label for="nom" class="block text-sm font-medium text-gray-700">Nom</label>
-                <input type="text" id="nom" name="nom" required class="w-full p-2 border rounded-md">
+
+        {% if success %}
+            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6 flex items-center">
+                <i class="fas fa-check-circle mr-3"></i>
+                <div>{{ success }}</div>
             </div>
-            <div>
-                <label for="prenom" class="block text-sm font-medium text-gray-700">Prénom</label>
-                <input type="text" id="prenom" name="prenom" required class="w-full p-2 border rounded-md">
+        {% endif %}
+
+        <form method="post" action="/api/users/create_personnel" enctype="multipart/form-data" id="personnelForm" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="nom" class="form-label flex items-center text-blue-800 font-medium">
+                        <i class="fas fa-user mr-2 text-blue-600"></i>Nom
+                    </label>
+                    <input type="text" name="nom" id="nom" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400" placeholder="Entrez le nom">
+                </div>
+
+                <div>
+                    <label for="prenom" class="form-label flex items-center text-blue-800 font-medium">
+                        <i class="fas fa-user mr-2 text-blue-600"></i>Prénom
+                    </label>
+                    <input type="text" name="prenom" id="prenom" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400" placeholder="Entrez le prénom">
+                </div>
+
+                <div>
+                    <label for="sexe" class="form-label flex items-center text-blue-800 font-medium">
+                        <i class="fas fa-venus-mars mr-2 text-blue-600"></i>Sexe
+                    </label>
+                    <select name="sexe" id="sexe" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                        <option value="" disabled selected>Sélectionnez le sexe</option>
+                        <option value="MALE">Homme</option>
+                        <option value="FEMALE">Femme</option>
+                        <option value="OTHER">Autre</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="age" class="form-label flex items-center text-blue-800 font-medium">
+                        <i class="fas fa-birthday-cake mr-2 text-blue-600"></i>Âge
+                    </label>
+                    <input type="number" name="age" id="age" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400" placeholder="Entrez l'âge" min="18" max="65">
+                </div>
+
+                <div>
+                    <label for="grade" class="form-label flex items-center text-blue-800 font-medium">
+                        <i class="fas fa-ranking-star mr-2 text-blue-600"></i>Grade
+                    </label>
+                    <select name="grade" id="grade" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                        <option value="" disabled selected>Sélectionnez le grade</option>
+                        <option value="SOLDAT">Soldat</option>
+                        <option value="CAPORAL">Caporal</option>
+                        <option value="CAPORAL_CHEF">Caporal-Chef</option>
+                        <option value="SERGENT">Sergent</option>
+                        <option value="SERGENT_CHEF">Sergent-Chef</option>
+                        <option value="ADJUDANT">Adjudant</option>
+                        <option value="ADJUDANT_CHEF">Adjudant-Chef</option>
+                        <option value="LIEUTENANT">Lieutenant</option>
+                        <option value="CAPITAINE">Capitaine</option>
+                        <option value="COMMANDANT">Commandant</option>
+                        <option value="LIEUTENANT_COLONEL">Lieutenant-Colonel</option>
+                        <option value="COLONEL">Colonel</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="matricule" class="form-label flex items-center text-blue-800 font-medium">
+                        <i class="fas fa-id-card mr-2 text-blue-600"></i>Matricule
+                    </label>
+                    <input type="text" name="matricule" id="matricule" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400" placeholder="Entrez le matricule">
+                    <p class="text-sm text-gray-500 mt-1">Ce matricule sera utilisé pour l'identification de la photo</p>
+                </div>
+
+                <div>
+                    <label for="taille" class="form-label flex items-center text-blue-800 font-medium">
+                        <i class="fas fa-ruler-vertical mr-2 text-blue-600"></i>Taille (cm)
+                    </label>
+                    <input type="number" name="taille" id="taille" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400" placeholder="Entrez la taille en cm" min="150" max="220">
+                </div>
+
+                <div>
+                    <label for="code_region" class="form-label flex items-center text-blue-800 font-medium">
+                        <i class="fas fa-map-marker-alt mr-2 text-blue-600"></i>Région
+                    </label>
+                    <select name="code_region" id="code_region" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                        <option value="" disabled selected>Sélectionnez la région</option>
+                        {% for region in regions %}
+                            <option value="{{ region.code }}">{{ region.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            <div>
-                <label for="sexe" class="block text-sm font-medium text-gray-700">Sexe</label>
-                <select id="sexe" name="sexe" required class="w-full p-2 border rounded-md">
-                    <option value="MALE">Homme</option>
-                    <option value="FEMALE">Femme</option>
-                    <option value="OTHER">Autre</option>
-                </select>
+
+            <div class="pt-6 border-t border-gray-200">
+                <label class="form-label flex items-center text-blue-800 font-medium">
+                    <i class="fas fa-camera mr-2 text-blue-600"></i>Photo d'identification
+                </label>
+
+                <div class="bg-blue-50 p-6 rounded-lg mb-6">
+                    <span class="badge badge-info flex items-center text-blue-700 font-medium">
+                        <i class="fas fa-info-circle mr-2 text-blue-600"></i>Information
+                    </span>
+                    <p class="text-sm text-gray-700 mt-2">Vous pouvez soit uploader une photo existante, soit en prendre une avec votre webcam. Assurez-vous que le visage est bien visible et correctement éclairé.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <div>
+                        <label class="block text-sm font-medium text-blue-800 mb-2">Uploader une photo :</label>
+                        <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/bmp" class="file-upload w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                    </div>
+
+                    <div class="text-center text-blue-800 font-medium">OU</div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-blue-800 mb-2">Utiliser la webcam :</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col items-center">
+                                <div class="bg-gray-100 p-3 rounded-lg w-full max-w-md">
+                                    <video id="webcam" width="100%" height="280" autoplay class="rounded-lg shadow-md"></video>
+                                </div>
+                                <div class="mt-4 flex justify-center space-x-4">
+                                    <button type="button" onclick="startWebcam()" class="btn-secondary px-4 py-2 rounded-md text-blue-800 bg-blue-100 hover:bg-blue-200 transition">
+                                        <i class="fas fa-play mr-2 text-blue-600"></i>Démarrer
+                                    </button>
+                                    <button type="button" onclick="capturePhoto()" class="btn-primary px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition">
+                                        <i class="fas fa-camera mr-2"></i>Capturer
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <div class="bg-gray-100 p-3 rounded-lg w-full max-w-md">
+                                    <img id="photoPreview" class="w-full h-64 object-contain rounded-lg shadow-md hidden" alt="Aperçu de la photo capturée" />
+                                </div>
+                                <p class="text-sm text-gray-500 mt-2">Aperçu de la photo capturée</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="canvas" width="640" height="480" class="hidden"></canvas>
             </div>
-            <div>
-                <label for="age" class="block text-sm font-medium text-gray-700">Âge</label>
-                <input type="number" id="age" name="age" required class="w-full p-2 border rounded-md">
+
+            <div class="flex justify-end gap-4 pt-8">
+                <a href="#" class="btn-secondary px-4 py-2 rounded-md text-blue-800 bg-blue-100 hover:bg-blue-200 transition text-center" aria-label="Annuler">
+                    <i class="fas fa-times mr-2 text-blue-600"></i>Annuler
+                </a>
+                <button type="submit" class="btn-primary px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition" aria-label="Créer le personnel">
+                    <i class="fas fa-plus-circle mr-2"></i>Créer le personnel
+                </button>
             </div>
-            <div>
-                <label for="grade" class="block text-sm font-medium text-gray-700">Grade</label>
-                <input type="text" id="grade" name="grade" required class="w-full p-2 border rounded-md">
-            </div>
-            <div>
-                <label for="matricule" class="block text-sm font-medium text-gray-700">Matricule</label>
-                <input type="text" id="matricule" name="matricule" required class="w-full p-2 border rounded-md">
-            </div>
-            <div>
-                <label for="taille" class="block text-sm font-medium text-gray-700">Taille (cm)</label>
-                <input type="number" id="taille" name="taille" required class="w-full p-2 border rounded-md">
-            </div>
-            <div>
-                <label for="code_region" class="block text-sm font-medium text-gray-700">Région</label>
-                <select id="code_region" name="code_region" required class="w-full p-2 border rounded-md">
-                    {% for region in regions %}
-                        <option value="{{ region.code }}">{{ region.nom }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="photo" class="block text-sm font-medium text-gray-700">Photo (via webcam)</label>
-                <video id="webcam" width="320" height="240" autoplay class="border rounded-md"></video>
-                <canvas id="canvas" width="320" height="240" class="hidden"></canvas>
-                <input type="file" id="photo" name="photo" accept="image/*" class="w-full p-2 border rounded-md">
-                <button type="button" id="capture" class="mt-2 bg-gray-600 text-white p-2 rounded-md hover:bg-gray-700">Capturer Photo</button>
-            </div>
-            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Créer</button>
         </form>
     </div>
-    <script>
+</div>
+
+<script>
+    let stream = null;
+
+    async function startWebcam() {
+        try {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                }
+            });
+            const video = document.getElementById('webcam');
+            video.srcObject = stream;
+            document.getElementById('photoPreview').classList.add('hidden');
+            document.getElementById('photo').value = '';
+        } catch (err) {
+            alert("Erreur lors de l'accès à la webcam : " + err.message);
+            console.error("Erreur webcam:", err);
+        }
+    }
+
+    async function capturePhoto() {
         const video = document.getElementById('webcam');
         const canvas = document.getElementById('canvas');
-        const photo = document.getElementById('photo');
-        const captureButton = document.getElementById('capture');
+        const photoPreview = document.getElementById('photoPreview');
+        const matricule = document.getElementById('matricule').value;
 
-        async function startWebcam() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-            } catch (err) {
-                console.error("Erreur d'accès à la webcam:", err);
-                alert("Impossible d'accéder à la webcam. Veuillez vérifier les autorisations.");
-            }
+        if (!stream) {
+            alert("Veuillez d'abord démarrer la webcam.");
+            return;
         }
 
-        captureButton.addEventListener('click', () => {
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
-                const file = new File([blob], "webcam_photo.jpg", { type: "image/jpeg" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                photo.files = dataTransfer.files;
-            }, 'image/jpeg');
-        });
+        if (!matricule) {
+            alert("Veuillez entrer un matricule avant de capturer la photo.");
+            return;
+        }
 
-        startWebcam();
-    </script>
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(async (blob) => {
+            const formData = new FormData();
+            formData.append('photo', blob, `${matricule}_webcam.jpg`);
+
+            try {
+                const response = await fetch('/api/users/upload_webcam_photo', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    photoPreview.src = result.photo_url;
+                    photoPreview.classList.remove('hidden');
+                    document.getElementById('photo').value = '';
+
+                    const file = new File([blob], `${matricule}_webcam.jpg`, { type: 'image/jpeg' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    document.getElementById('photo').files = dataTransfer.files;
+
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                } else {
+                    alert("Erreur lors de l'enregistrement de la photo webcam : " + result.detail);
+                }
+            } catch (err) {
+                alert("Erreur lors de l'envoi de la photo webcam : " + err.message);
+                console.error("Erreur upload:", err);
+            }
+        }, 'image/jpeg', 0.9);
+    }
+
+    document.getElementById('photo').addEventListener('change', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            document.getElementById('photoPreview').classList.add('hidden');
+        }
+    });
+
+    // Ensure grade is uppercase before form submission
+    document.getElementById('personnelForm').addEventListener('submit', (event) => {
+        const gradeInput = document.getElementById('grade');
+        if (gradeInput.value) {
+            gradeInput.value = gradeInput.value.toUpperCase();
+        }
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    });
+</script>
 {% endblock %}

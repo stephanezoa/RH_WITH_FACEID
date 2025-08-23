@@ -19,3 +19,9 @@ class Affectation(AffectationBase):
 
     class Config:
         from_attributes = True
+
+
+
+class AffectationUpdate(BaseModel):
+    code_region: str
+    status: str

@@ -1,28 +1,277 @@
 {% extends "base.html" %}
+{% block title %}Démarrer une affectation{% endblock %}
 {% block content %}
-    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Démarrer une affectation</h2>
+<div class="max-w-6xl mx-auto py-8 px-4 animate-fade-in">
+    <div class="mb-10 text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-3 flex items-center justify-center">
+            <i class="fas fa-exchange-alt mr-3 text-blue-600"></i>Démarrer une affectation
+        </h1>
+        <p class="text-lg text-gray-600">Sélectionnez un personnel et une région pour créer une affectation</p>
+    </div>
+
+    <div class="form-container bg-white rounded-xl shadow-lg p-8 border border-blue-100 animate-slide-in">
         {% if error %}
-            <p class="text-red-500 text-center">{{ error }}</p>
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6 flex items-center animate-slide-in">
+                <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+                <div>{{ error }}</div>
+            </div>
         {% endif %}
-        <form action="/api/users/affectation" method="post" class="space-y-4">
-            <div>
-                <label for="personnel_id" class="block text-sm font-medium text-gray-700">Personnel</label>
-                <select id="personnel_id" name="personnel_id" required class="w-full p-2 border rounded-md">
-                    {% for personnel in personnels %}
-                        <option value="{{ personnel.id }}">{{ personnel.nom }} {{ personnel.prenom }} ({{ personnel.matricule }})</option>
-                    {% endfor %}
-                </select>
+
+        {% if success %}
+            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6 flex items-center animate-slide-in">
+                <i class="fas fa-check-circle mr-3 text-green-500"></i>
+                <div>{{ success }}</div>
             </div>
-            <div>
-                <label for="code_region" class="block text-sm font-medium text-gray-700">Nouvelle Région</label>
-                <select id="code_region" name="code_region" required class="w-full p-2 border rounded-md">
-                    {% for region in regions %}
-                        <option value="{{ region.code }}">{{ region.nom }}</option>
-                    {% endfor %}
-                </select>
+        {% endif %}
+
+        {% if not personnels %}
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-6 flex items-center animate-slide-in">
+                <i class="fas fa-info-circle mr-3 text-yellow-500"></i>
+                <div>
+                    Aucun personnel disponible pour votre région ({{ current_user.code_region | default('non définie') }}).
+                    Veuillez <a href="/api/users/create_personnel" class="text-blue-600 hover:underline">créer un personnel</a> d'abord.
+                </div>
             </div>
-            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Démarrer Affectation</button>
+        {% endif %}
+
+        {% if not pertinent_regions %}
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-6 flex items-center animate-slide-in">
+                <i class="fas fa-info-circle mr-3 text-yellow-500"></i>
+                <div>
+                    Aucune région disponible. Veuillez <a href="/api/regions/create" class="text-blue-600 hover:underline">ajouter une région</a> ou contacter l'administrateur.
+                </div>
+            </div>
+        {% endif %}
+
+        <form method="post" id="affectationForm" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="personnel_id" class="form-label flex items-center text-gray-800 font-medium mb-2">
+                        <i class="fas fa-user mr-2 text-blue-600"></i>Personnel
+                    </label>
+                    <div class="flex items-center gap-4">
+                        <select name="personnel_id" id="personnel_id" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400" {% if not personnels %}disabled{% endif %}>
+                            <option value="" disabled selected>Sélectionnez un personnel</option>
+                            {% if personnels %}
+                                {% for personnel in personnels %}
+                                    <option value="{{ personnel.id }}" data-region="{{ personnel.code_region }}">
+                                        {{ personnel.nom }} {{ personnel.prenom }} ({{ personnel.matricule }})
+                                        {% if personnel_affectations[personnel.id] %}
+                                            - Affectation {{ personnel_affectations[personnel.id][0].status }} vers {{ personnel_affectations[personnel.id][0].code_region }}
+                                        {% endif %}
+                                    </option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="" disabled>Aucun personnel disponible</option>
+                            {% endif %}
+                        </select>
+                        <span id="currentRegion" class="text-sm text-gray-600"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="code_region" class="form-label flex items-center text-gray-800 font-medium mb-2">
+                        <i class="fas fa-map-marker-alt mr-2 text-blue-600"></i>Nouvelle Région
+                    </label>
+                    <select name="code_region" id="code_region" required aria-required="true" class="form-input w-full rounded-md border-gray-300 bg-blue-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400" {% if not pertinent_regions %}disabled{% endif %}>
+                        <option value="" disabled selected>Sélectionnez une région</option>
+                        {% if pertinent_regions %}
+                            {% for region in pertinent_regions %}
+                                <option value="{{ region.code }}">{{ region.nom }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="" disabled>Aucune région disponible</option>
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 pt-8">
+                <button type="reset" class="btn-secondary px-5 py-2.5 rounded-md text-gray-800 bg-blue-100 hover:bg-blue-200 transition flex items-center" aria-label="Réinitialiser">
+                    <i class="fas fa-undo mr-2 text-blue-600"></i>Réinitialiser
+                </button>
+                <a href="/api/users/drh_dashboard" class="btn-secondary px-5 py-2.5 rounded-md text-gray-800 bg-blue-100 hover:bg-blue-200 transition flex items-center" aria-label="Annuler">
+                    <i class="fas fa-times mr-2 text-blue-600"></i>Annuler
+                </a>
+                <button type="submit" class="btn-primary px-5 py-2.5 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition flex items-center relative" aria-label="Démarrer l'affectation" id="submitButton" {% if not personnels or not pertinent_regions %}disabled{% endif %}>
+                    <span id="submitText"><i class="fas fa-plus-circle mr-2"></i>Démarrer l'affectation</span>
+                    <div id="loadingSpinner" class="absolute inset-0 flex items-center justify-center hidden">
+                        <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+                    </div>
+                </button>
+            </div>
         </form>
     </div>
+</div>
+
+<!-- Inclure Toastify -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<script>
+    const personnelsData = [
+        {% for personnel in personnels %}
+            {
+                id: {{ personnel.id | tojson }},
+                nom: {{ personnel.nom | tojson }},
+                prenom: {{ personnel.prenom | tojson }},
+                matricule: {{ personnel.matricule | tojson }},
+                code_region: {{ personnel.code_region | tojson }}
+            }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    console.log('Personnels disponibles :', personnelsData);
+    console.log('Régions disponibles :', [
+        {% for region in regions %}
+            {
+                code: {{ region.code | tojson }},
+                nom: {{ region.nom | tojson }}
+            }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]);
+    console.log('Pertinent régions :', [
+        {% for region in pertinent_regions %}
+            {
+                code: {{ region.code | tojson }},
+                nom: {{ region.nom | tojson }}
+            }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]);
+    console.log('Code région utilisateur :', {{ current_user.code_region | tojson | safe }});
+
+    const personnelSelect = document.getElementById('personnel_id');
+    const currentRegionSpan = document.getElementById('currentRegion');
+    personnelSelect.addEventListener('change', () => {
+        const selectedId = parseInt(personnelSelect.value);
+        const personnel = personnelsData.find(p => p.id === selectedId);
+        if (personnel) {
+            currentRegionSpan.textContent = `Région actuelle : ${personnel.code_region}`;
+            currentRegionSpan.classList.add('animate-slide-in');
+        } else {
+            currentRegionSpan.textContent = '';
+            currentRegionSpan.classList.remove('animate-slide-in');
+        }
+    });
+
+    document.getElementById('affectationForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const personnelSelect = document.getElementById('personnel_id');
+        const regionSelect = document.getElementById('code_region');
+        const submitButton = document.getElementById('submitButton');
+        const submitText = document.getElementById('submitText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        if (!personnelSelect.value) {
+            Toastify({
+                text: "Veuillez sélectionner un personnel.",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#EF4444",
+                stopOnFocus: true
+            }).showToast();
+            return;
+        }
+        if (!regionSelect.value) {
+            Toastify({
+                text: "Veuillez sélectionner une région.",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#EF4444",
+                stopOnFocus: true
+            }).showToast();
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitText.classList.add('hidden');
+        loadingSpinner.classList.remove('hidden');
+
+        try {
+            const formData = new FormData();
+            formData.append('personnel_id', personnelSelect.value);
+            formData.append('code_region', regionSelect.value);
+
+            const response = await fetch('/api/users/affectation', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                Toastify({
+                    text: `Affectation créée (ID: ${result.affectation_id}). Veuillez valider avec reconnaissance faciale sur le tableau de bord RH.`,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#10B981",
+                    stopOnFocus: true
+                }).showToast();
+                setTimeout(() => window.location.href = '/api/users/drh_dashboard', 1000);
+            } else {
+                throw new Error(result.detail || 'Erreur lors de la création de l’affectation');
+            }
+        } catch (err) {
+            Toastify({
+                text: `Erreur : ${err.message}`,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#EF4444",
+                stopOnFocus: true
+            }).showToast();
+        } finally {
+            submitButton.disabled = false;
+            submitText.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+        }
+    });
+
+    document.querySelector('button[type="reset"]').addEventListener('click', () => {
+        document.getElementById('personnel_id').value = '';
+        document.getElementById('code_region').value = '';
+        currentRegionSpan.textContent = '';
+        currentRegionSpan.classList.remove('animate-slide-in');
+        Toastify({
+            text: "Formulaire réinitialisé.",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#3B82F6",
+            stopOnFocus: true
+        }).showToast();
+    });
+</script>
+
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    .animate-slide-in {
+        animation: slideIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .btn-primary {
+        @apply bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200;
+    }
+    .btn-secondary {
+        @apply bg-blue-100 text-gray-800 rounded-md hover:bg-blue-200 transition-colors duration-200;
+    }
+    .form-input {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400;
+    }
+    .form-label {
+        @apply text-sm font-medium text-gray-700;
+    }
+</style>
 {% endblock %}

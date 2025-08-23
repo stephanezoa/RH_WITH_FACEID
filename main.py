@@ -11,6 +11,8 @@ from models.personnel import Personnel
 from models.affectation import Affectation
 from routers import auth, users
 import logging
+from routers import affectations
+from routers import superuser
 
 # Configurer le logging pour déboguer
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="API My RH Project")
 
+app.include_router(superuser.router)
+app.include_router(affectations.router)
 # Montage des fichiers statiques et templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
@@ -53,9 +57,9 @@ def init_db():
             drh_user = User(
                 nom_utilisateur="drhuser",
                 mot_de_passe_hash=get_password_hash("drh123"),
-                email="drhuser@example.com",
+                email="drhuser@example2.com",
                 role="DRH",
-                code_region="PARIS"
+                code_region="DOUALA"
             )
             db.add(drh_user)
             db.commit()
@@ -81,9 +85,18 @@ def init_db():
         regions_count = db.query(Region).count()
         if regions_count == 0:
             default_regions = [
-                Region(code="PARIS", nom="Paris"),
-                Region(code="DOUALA", nom="Douala")
+                Region(code="AD", nom="Adamaoua"),
+                Region(code="CE", nom="Centre"),
+                Region(code="ES", nom="Est"),
+                Region(code="EN", nom="Extreme-Nord"),
+                Region(code="LI", nom="Littoral"),
+                Region(code="NO", nom="Nord"),
+                Region(code="NW", nom="Nord-Ouest"),
+                Region(code="OU", nom="Ouest"),
+                Region(code="SU", nom="Sud"),
+                Region(code="SW", nom="Sud-Ouest")
             ]
+
             db.add_all(default_regions)
             db.commit()
             logger.info("Régions créées : PARIS, DOUALA")

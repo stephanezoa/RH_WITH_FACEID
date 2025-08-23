@@ -1,20 +1,165 @@
 {% extends "base.html" %}
+{% block title %}Connexion - My RH Project{% endblock %}
 {% block content %}
-    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Connexion</h2>
-        {% if error %}
-            <p class="text-red-500 text-center">{{ error }}</p>
-        {% endif %}
-        <form action="/api/auth/login" method="post" enctype="multipart/form-data" class="space-y-4">
-            <div>
-                <label for="nom_utilisateur" class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
-                <input type="text" id="nom_utilisateur" name="nom_utilisateur" required class="w-full p-2 border rounded-md">
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div class="max-w-md w-full space-y-8 transform transition-all duration-500 hover:scale-105">
+        <!-- En-tête avec animation -->
+        <div class="text-center">
+            <div class="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg mb-4 transform transition-all duration-700 hover:rotate-12">
+                <i class="fas fa-landmark text-white text-2xl"></i>
             </div>
-            <div>
-                <label for="mot_de_passe" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                <input type="password" id="mot_de_passe" name="mot_de_passe" required class="w-full p-2 border rounded-md">
+            <h2 class="mt-6 text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                Connexion
+            </h2>
+            <p class="mt-2 text-sm text-gray-600 animate-pulse">
+                Accédez à votre espace RH sécurisé
+            </p>
+            <div class="mt-2 w-20 h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mx-auto"></div>
+        </div>
+
+        <!-- Carte de formulaire -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 border border-blue-100 transform transition-all duration-500 hover:shadow-2xl">
+            {% if error %}
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg flex items-center animate-shake">
+                <i class="fas fa-exclamation-circle mr-3"></i>
+                <span>{{ error }}</span>
             </div>
-            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Se connecter</button>
-        </form>
+            {% endif %}
+
+            <form action="/api/auth/login" method="post" enctype="multipart/form-data" class="space-y-6">
+                <!-- Champ nom d'utilisateur -->
+                <div class="space-y-2">
+                    <label for="nom_utilisateur" class="block text-sm font-medium text-gray-700 flex items-center">
+                        <i class="fas fa-user mr-2 text-blue-500"></i>Nom d'utilisateur
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="text"
+                            id="nom_utilisateur"
+                            name="nom_utilisateur"
+                            required
+                            class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-300 placeholder-gray-400 shadow-sm"
+                            placeholder="Votre identifiant"
+                            autocomplete="username"
+                        >
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Champ mot de passe -->
+                <div class="space-y-2">
+                    <label for="mot_de_passe" class="block text-sm font-medium text-gray-700 flex items-center">
+                        <i class="fas fa-lock mr-2 text-blue-500"></i>Mot de passe
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="mot_de_passe"
+                            name="mot_de_passe"
+                            required
+                            class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-300 placeholder-gray-400 shadow-sm pr-10"
+                            placeholder="Votre mot de passe"
+                            autocomplete="current-password"
+                        >
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="fas fa-key text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bouton de connexion -->
+                <button
+                    type="submit"
+                    class="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white p-4 rounded-xl font-semibold shadow-lg hover:from-blue-600 hover:to-blue-800 transform hover:scale-105 transition-all duration-300 focus:ring-4 focus:ring-blue-200 focus:outline-none flex items-center justify-center group"
+                >
+                    <i class="fas fa-sign-in-alt mr-2 group-hover:animate-bounce"></i>
+                    Se connecter
+                </button>
+
+                <!-- Options supplémentaires -->
+                <div class="text-center pt-4 border-t border-gray-100">
+                    <p class="text-sm text-gray-600">
+                        Probleme de connexion ?
+                        <a href="#" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-300">
+                            Contactez l'administrateur
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer décoratif -->
+        <div class="text-center">
+            <p class="text-xs text-gray-500 mt-6 animate-pulse">
+                <i class="fas fa-shield-alt mr-1 text-blue-400"></i>
+                Système sécurisé de gestion RH
+            </p>
+        </div>
     </div>
+</div>
+
+<!-- Styles d'animation supplémentaires -->
+<style>
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    .animate-shake {
+        animation: shake 0.5s ease-in-out;
+    }
+
+    .animate-bounce {
+        animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 20%, 53%, 80%, 100% {
+            transform: translate3d(0, 0, 0);
+        }
+        40%, 43% {
+            transform: translate3d(0, -8px, 0);
+        }
+        70% {
+            transform: translate3d(0, -4px, 0);
+        }
+        90% {
+            transform: translate3d(0, -2px, 0);
+        }
+    }
+</style>
+
+<!-- Script pour les interactions -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation des inputs au focus
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('ring-2', 'ring-blue-200', 'rounded-xl');
+            });
+
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('ring-2', 'ring-blue-200', 'rounded-xl');
+            });
+        });
+
+        // Effet de vague sur le bouton
+        const button = document.querySelector('button[type="submit"]');
+        button.addEventListener('mouseenter', function() {
+            this.classList.add('shadow-xl');
+        });
+
+        button.addEventListener('mouseleave', function() {
+            this.classList.remove('shadow-xl');
+        });
+
+        // Animation d'entrée pour le formulaire
+        const form = document.querySelector('form');
+        form.classList.add('animate-fade-in-up');
+    });
+</script>
 {% endblock %}

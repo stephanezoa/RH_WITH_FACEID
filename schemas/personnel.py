@@ -17,6 +17,7 @@ class PersonnelBase(BaseModel):
     taille: int
     code_region: str
     photo_url: Optional[str] = None
+    face_token: Optional[str] = None  # Nouveau champ pour face_token
 
 class PersonnelCreate(PersonnelBase):
     pass

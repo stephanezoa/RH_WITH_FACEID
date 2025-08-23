@@ -1,33 +1,514 @@
 {% extends "base.html" %}
+{% block title %}Tableau de bord Super Utilisateur{% endblock %}
 {% block content %}
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4 text-center">Tableau de bord Admin (SUPER_USER)</h2>
-        <h3 class="text-xl font-semibold mb-2">Tous les utilisateurs</h3>
-        <table class="w-full border-collapse border">
-            <thead>
-                <tr class="bg-gray-200">
-                    <th class="border p-2">Nom d'utilisateur</th>
-                    <th class="border p-2">Email</th>
-                    <th class="border p-2">Rôle</th>
-                    <th class="border p-2">Région</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for utilisateur in utilisateurs %}
-                    <tr>
-                        <td class="border p-2">{{ utilisateur.nom_utilisateur }}</td>
-                        <td class="border p-2">{{ utilisateur.email }}</td>
-                        <td class="border p-2">{{ utilisateur.role }}</td>
-                        <td class="border p-2">{{ utilisateur.code_region or 'Aucune' }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <h3 class="text-xl font-semibold mt-6 mb-2">Régions</h3>
-        <ul class="list-disc pl-6">
-            {% for region in regions %}
-                <li>{{ region.nom }} ({{ region.code }})</li>
-            {% endfor %}
-        </ul>
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4 animate-fade-in-down">Tableau de bord Super Utilisateur - {{ current_user.nom_utilisateur }}</h1>
+    <p class="mb-6">Gérez les utilisateurs DRH et RH, et consultez les tâches en cours.</p>
+
+    <!-- Inclure Toastify CSS et JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <!-- Section Statistiques -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white shadow-md rounded-lg p-6 animate-scale-in">
+            <h3 class="text-lg font-semibold text-gray-700">Utilisateurs DRH/RH</h3>
+            <p class="text-3xl font-bold text-indigo-600">{{ stats.total_users }}</p>
+            <p class="text-sm text-gray-500">Total des utilisateurs actifs</p>
+        </div>
+        <div class="bg-white shadow-md rounded-lg p-6 animate-scale-in">
+            <h3 class="text-lg font-semibold text-gray-700">Affectations en attente</h3>
+            <p class="text-3xl font-bold text-indigo-600">{{ stats.total_affectations }}</p>
+            <p class="text-sm text-gray-500">Tâches à traiter</p>
+        </div>
+        <div class="bg-white shadow-md rounded-lg p-6 animate-scale-in">
+            <h3 class="text-lg font-semibold text-gray-700">Régions</h3>
+            <p class="text-3xl font-bold text-indigo-600">{{ stats.total_regions }}</p>
+            <p class="text-sm text-gray-500">Régions disponibles</p>
+        </div>
     </div>
+
+    <!-- Section Créer un utilisateur DRH ou RH -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6 animate-fade-in-up">
+        <h2 class="text-xl font-semibold mb-4">Créer un utilisateur DRH ou RH</h2>
+        <form id="create-user-form" class="space-y-4">
+            <div>
+                <label for="nom_utilisateur" class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+                <input type="text" id="nom_utilisateur" name="nom_utilisateur" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" name="email" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="mot_de_passe" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                <input type="password" id="mot_de_passe" name="mot_de_passe" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="role" class="block text-sm font-medium text-gray-700">Rôle</label>
+                <select id="role" name="role" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="DRH">DRH</option>
+                    <option value="RH">RH</option>
+                </select>
+            </div>
+            <div>
+                <label for="code_region" class="block text-sm font-medium text-gray-700">Région</label>
+                <select id="code_region" name="code_region"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Sélectionner une région</option>
+                    {% for region in regions %}
+                        <option value="{{ region.code }}">{{ region.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition transform hover:scale-105">
+                    Créer utilisateur
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Section Liste des utilisateurs DRH et RH -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6 animate-fade-in-up">
+        <h2 class="text-xl font-semibold mb-4">Liste des utilisateurs DRH et RH</h2>
+        <div id="users-table">
+            {% if utilisateurs %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom d'utilisateur</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Région</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for utilisateur in utilisateurs %}
+                                {% if utilisateur.role in ['DRH', 'RH'] %}
+                                    <tr class="animate-fade-in">
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ utilisateur.nom_utilisateur }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ utilisateur.email }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ utilisateur.role }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ utilisateur.code_region or 'Aucune' }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <button onclick="openEditModal({{ utilisateur.id }})"
+                                                    class="text-indigo-600 hover:text-indigo-900 transition transform hover:scale-105">Modifier</button>
+                                            <button onclick="openDeleteModal({{ utilisateur.id }}, '{{ utilisateur.nom_utilisateur }}')"
+                                                    class="text-red-600 hover:text-red-900 ml-4 transition transform hover:scale-105">Supprimer</button>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-gray-500">Aucun utilisateur DRH ou RH trouvé.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section Tâches en cours -->
+    <div class="bg-white shadow-md rounded-lg p-6 animate-fade-in-up">
+        <h2 class="text-xl font-semibold mb-4">Tâches en cours (Affectations PENDING)</h2>
+        {% if affectations %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prénom</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricule</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Région d'origine</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Région de destination</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for affectation, personnel in affectations %}
+                            {% if affectation.status == 'PENDING' %}
+                                <tr class="animate-fade-in">
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ personnel.nom }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ personnel.prenom }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ personnel.matricule }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ personnel.code_region or 'Aucune' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ affectation.code_region }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ affectation.status }}</td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-500">Aucune affectation en cours.</p>
+        {% endif %}
+    </div>
+
+    <!-- Modale pour modifier un utilisateur -->
+    <div id="edit-user-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md animate-scale-in">
+            <h2 class="text-xl font-semibold mb-4">Modifier un utilisateur</h2>
+            <form id="edit-user-form" class="space-y-4">
+                <input type="hidden" id="edit_user_id" name="user_id">
+                <div>
+                    <label for="edit_nom_utilisateur" class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+                    <input type="text" id="edit_nom_utilisateur" name="nom_utilisateur" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="edit_email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="edit_email" name="email" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="edit_mot_de_passe" class="block text-sm font-medium text-gray-700">Nouveau mot de passe (optionnel)</label>
+                    <input type="password" id="edit_mot_de_passe" name="mot_de_passe"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="edit_role" class="block text-sm font-medium text-gray-700">Rôle</label>
+                    <select id="edit_role" name="role" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="DRH">DRH</option>
+                        <option value="RH">RH</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit_code_region" class="block text-sm font-medium text-gray-700">Région</label>
+                    <select id="edit_code_region" name="code_region"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Sélectionner une région</option>
+                        {% for region in regions %}
+                            <option value="{{ region.code }}">{{ region.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closeEditModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition transform hover:scale-105">
+                        Annuler
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition transform hover:scale-105">
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale pour confirmer la suppression -->
+    <div id="delete-user-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md animate-scale-in">
+            <h2 class="text-xl font-semibold mb-4">Confirmer la suppression</h2>
+            <p id="delete-user-message" class="mb-4"></p>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeDeleteModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition transform hover:scale-105">
+                    Annuler
+                </button>
+                <button onclick="confirmDelete()"
+                        class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition transform hover:scale-105">
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script pour gérer le formulaire via AJAX -->
+    <script>
+        // Fonction pour recharger la liste des utilisateurs
+        async function refreshUsersTable() {
+            try {
+                const response = await fetch('/superuser/get_users', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const users = await response.json();
+                const tableBody = document.querySelector('#users-table tbody');
+                if (!tableBody) {
+                    tableBody = document.createElement('tbody');
+                    document.querySelector('#users-table table').appendChild(tableBody);
+                }
+                tableBody.innerHTML = '';
+                if (users.length > 0) {
+                    users.forEach(user => {
+                        if (['DRH', 'RH'].includes(user.role)) {
+                            const row = document.createElement('tr');
+                            row.classList.add('animate-fade-in');
+                            row.innerHTML = `
+                                <td class="px-6 py-4 whitespace-nowrap">${user.nom_utilisateur}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${user.role}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${user.code_region || 'Aucune'}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <button onclick="openEditModal(${user.id})" class="text-indigo-600 hover:text-indigo-900 transition transform hover:scale-105">Modifier</button>
+                                    <button onclick="openDeleteModal(${user.id}, '${user.nom_utilisateur}')" class="text-red-600 hover:text-red-900 ml-4 transition transform hover:scale-105">Supprimer</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        }
+                    });
+                } else {
+                    document.querySelector('#users-table').innerHTML = '<p class="text-gray-500">Aucun utilisateur DRH ou RH trouvé.</p>';
+                }
+            } catch (error) {
+                console.error('Erreur lors du rechargement des utilisateurs:', error);
+                Toastify({
+                    text: "Erreur lors du rechargement des utilisateurs",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#ef4444",
+                }).showToast();
+            }
+        }
+
+        // Création d'utilisateur
+        document.getElementById('create-user-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/superuser/create_user', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Toastify({
+                        text: result.success,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#4caf50",
+                    }).showToast();
+                    form.reset();
+                    await refreshUsersTable();
+                } else if (result.error) {
+                    Toastify({
+                        text: result.error,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#ef4444",
+                    }).showToast();
+                }
+            } catch (error) {
+                Toastify({
+                    text: "Erreur lors de la création de l'utilisateur",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#ef4444",
+                }).showToast();
+            }
+        });
+
+        // Ouvrir la modale de modification
+        async function openEditModal(userId) {
+            try {
+                const response = await fetch(`/superuser/modifier_utilisateur/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const user = await response.json();
+
+                if (user.error) {
+                    Toastify({
+                        text: user.error,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#ef4444",
+                    }).showToast();
+                    return;
+                }
+
+                document.getElementById('edit_user_id').value = user.id;
+                document.getElementById('edit_nom_utilisateur').value = user.nom_utilisateur;
+                document.getElementById('edit_email').value = user.email;
+                document.getElementById('edit_role').value = user.role;
+                document.getElementById('edit_code_region').value = user.code_region || '';
+                document.getElementById('edit-user-modal').classList.remove('hidden');
+            } catch (error) {
+                Toastify({
+                    text: "Erreur lors de la récupération des données de l'utilisateur",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#ef4444",
+                }).showToast();
+            }
+        }
+
+        // Fermer la modale de modification
+        function closeEditModal() {
+            document.getElementById('edit-user-form').reset();
+            document.getElementById('edit-user-modal').classList.add('hidden');
+        }
+
+        // Modification d'utilisateur
+        document.getElementById('edit-user-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const userId = document.getElementById('edit_user_id').value;
+
+            try {
+                const response = await fetch(`/superuser/modifier_utilisateur/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Toastify({
+                        text: result.success,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#4caf50",
+                    }).showToast();
+                    closeEditModal();
+                    await refreshUsersTable();
+                } else if (result.error) {
+                    Toastify({
+                        text: result.error,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#ef4444",
+                    }).showToast();
+                }
+            } catch (error) {
+                Toastify({
+                    text: "Erreur lors de la modification de l'utilisateur",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#ef4444",
+                }).showToast();
+            }
+        });
+
+        // Ouvrir la modale de suppression
+        let deleteUserId = null;
+        function openDeleteModal(userId, nomUtilisateur) {
+            deleteUserId = userId;
+            document.getElementById('delete-user-message').textContent = `Voulez-vous vraiment supprimer l'utilisateur ${nomUtilisateur} ?`;
+            document.getElementById('delete-user-modal').classList.remove('hidden');
+        }
+
+        // Fermer la modale de suppression
+        function closeDeleteModal() {
+            deleteUserId = null;
+            document.getElementById('delete-user-modal').classList.add('hidden');
+        }
+
+        // Confirmer la suppression
+        async function confirmDelete() {
+            if (!deleteUserId) return;
+
+            try {
+                const response = await fetch(`/superuser/supprimer_utilisateur/${deleteUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Toastify({
+                        text: result.success,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#4caf50",
+                    }).showToast();
+                    closeDeleteModal();
+                    await refreshUsersTable();
+                } else if (result.error) {
+                    Toastify({
+                        text: result.error,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#ef4444",
+                    }).showToast();
+                }
+            } catch (error) {
+                Toastify({
+                    text: "Erreur lors de la suppression de l'utilisateur",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#ef4444",
+                }).showToast();
+            }
+        }
+    </script>
+
+    <!-- Styles pour animations personnalisées -->
+    <style>
+        @keyframes fade-in-down {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scale-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in-down {
+            animation: fade-in-down 0.5s ease-out;
+        }
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out;
+        }
+        .animate-scale-in {
+            animation: scale-in 0.5s ease-out;
+        }
+    </style>
+</div>
 {% endblock %}

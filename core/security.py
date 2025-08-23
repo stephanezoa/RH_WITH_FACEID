@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Settings(BaseSettings):
-    JWT_SECRET: str = "your-secret-key"  # Remplacer par une clé secrète sécurisée en production
+    JWT_SECRET: str = "rh-supere-secret-crypto"  # Remplacer par une clé secrète sécurisée en production
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
